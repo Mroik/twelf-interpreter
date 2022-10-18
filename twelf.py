@@ -40,6 +40,14 @@ class Lexer:
                 case ".":
                     accumulator.append(self._reader.consume())
                     break
+                case "(":
+                    if len(accumulator) == 0:
+                        accumulator.append(self._reader.consume())
+                    break
+                case ")":
+                    if len(accumulator) == 0:
+                        accumulator.append(self._reader.consume())
+                    break
                 case _:
                     accumulator.append(self._reader.consume())
         return "".join(accumulator)
