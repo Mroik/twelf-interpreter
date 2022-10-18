@@ -14,6 +14,10 @@ class InputReader:
         self._text = self._text[self._index + k:]
         return ris
 
+    def consume_up_to(self, token: str):
+        index = self._text.find(token, self._index)
+        self._index = index + len(token)
+
     def is_EOF(self) -> bool:
         if len(self._text) == 0:
             return True
@@ -23,41 +27,53 @@ class InputReader:
 class Lexer:
     def __init__(self, reader: InputReader):
         self._reader = reader
-        self._queue = []
+        self._queue = list()
 
     def _generate_token(self):
-        accumulator = []
-        while not True:
-            match self._reader.peek():
-                case ":":
-                    if len(accumulator) == 0:
-                        accumulator.append(self._reader.consume())
-                    break
-                case " ":
-                    self._reader.consume()
-                    if len(accumulator) != 0:
+        accumulator = list()
+        i = 1
+        while True:
+            try:
+                match peeked := self._reader.peek(i)[i - 1]:
+                    case ":":
+                        if len(accumulator) == 0:
+                            accumulator.append(peeked)
+                            i += 1
                         break
-                case ".":
-                    accumulator.append(self._reader.consume())
-                    break
-                case "(":
-                    if len(accumulator) == 0:
-                        accumulator.append(self._reader.consume())
-                    break
-                case ")":
-                    if len(accumulator) == 0:
-                        accumulator.append(self._reader.consume())
-                    break
-                case _:
-                    accumulator.append(self._reader.consume())
+                    case " ":
+                        i += 1
+                        if len(accumulator) != 0:
+                            break
+                    case ".":
+                        accumulator.append(peeked)
+                        i += 1
+                        break
+                    case "(":
+                        if len(accumulator) == 0:
+                            accumulator.append(peeked)
+                            i += 1
+                        break
+                    case ")":
+                        if len(accumulator) == 0:
+                            accumulator.append(peeked)
+                            i += 1
+                        break
+                    case _:
+                        accumulator.append(peeked)
+                        i += 1
+            except IndexError:
+                i += 1
+                break
         return "".join(accumulator)
 
 
     def peek(self, k: int = 1) -> List[str]:
         l_queue = len(self._queue)
-        if k < l_queue:
+        if l_queue < k:
             for x in range(k - l_queue):
-                self._queue.append(self._generate_token())
+                generated = self._generate_token()
+                self._queue.append(generated)
+                self._reader.consume_up_to(generated)
         return self._queue[:k]
 
     def consume(self, k: int = 1) -> List[str]:
@@ -70,7 +86,7 @@ class Lexer:
 class Parser:
     def __init__(self, lexer: Lexer):
         self._lexer = lexer
-        self._types = []
+        self._types = list()
         self._functions = {}
         self._rules = {}
 
@@ -82,7 +98,7 @@ class Parser:
 
     # Does not support infixing
     def _parse_function_definiton(self):
-        parameters = []
+        parameters = list()
         name = self._lexer.consume()[0]  # TODO check if already exist
         if self._lexer.consume()[0] != ":":
             raise Exception("TODO")
@@ -96,7 +112,7 @@ class Parser:
         self._functions[name] = parameters
 
     def _parse_rule_definition(self):
-        steps = []
+        steps = list()
         name = self._lexer.consume(2)[0]
         i = 1
         while True:
