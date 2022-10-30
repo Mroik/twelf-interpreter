@@ -1,6 +1,12 @@
 from typing import List, Tuple, Dict
+from enum import Enum, auto
 
-from twelf.exceptions import AlreadyDefined, TypeNotDefined, FunctionNotDefined, ExpectedParameters
+from twelf.exceptions import AlreadyDefined, TypeNotDefined, FunctionNotDefined, ExpectedParameters, ConstantNotDefined
+
+
+class Parameter(Enum):
+    VARIABLE = auto()
+    CONSTANT = auto()
 
 
 class Twelf:
@@ -10,13 +16,14 @@ class Twelf:
         "<-",
         ":",
         "%",
+        "type",
     ]
 
     def __init__(self):
-        self._types: str = ["type"]
+        self._types: str = []
         self._constants: Dict[str, str] = {}
         self._function: Dict[str, List[str]] = {}
-        self._rule: Dict[str, List[Tuple[str, List[str | None]]]] = {}
+        self._rule: Dict[str, List[Tuple[str, List[None | Tuple[str, Parameter]]]]] = {}
 
     def _check_if_defined(func):
         def inner(self, name, *args):
@@ -24,6 +31,13 @@ class Twelf:
                 raise AlreadyDefined(f"{name} already defined")
             func(self, name, *args)
         return inner
+
+    def _parameter_type(self, name: str) -> Parameter:
+        if ord(name[0]) >= 65 and ord(name[0]) <= 90:
+            return Parameter.VARIABLE
+        if name in self._constants:
+            return Parameter.CONSTANT
+        raise ConstantNotDefined(f"Constant {name} not defined")
 
     @_check_if_defined
     def define_type(self, name: str):
@@ -53,12 +67,16 @@ class Twelf:
         test: sub Z Y X
             <- sum X Y Z.
         """
+        parsed_rule = []
         for func in rule:
             if func[0] not in self._function:
                 raise FunctionNotDefined(f"{func[0]} is not a defined function")
-            n_params = len(self._function[func[0]])
-            if self._function[func[0]][-1] == "type":
-                n_params -= 1
-            if len(func[1]) != n_params:
+            if len(func[1]) != len(self._function[func[0]]):
                 raise ExpectedParameters(f"{func[0]} expects {len(self._function[func[0]])} parameters")
-        self._rule[name] = rule
+
+            params = []
+            for param in func[1]:
+                params.append((param, self._parameter_type(param)))
+            parsed_rule.append((func[0], params))
+
+        self._rule[name] = parsed_rule

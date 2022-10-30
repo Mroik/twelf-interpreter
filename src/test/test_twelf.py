@@ -1,7 +1,7 @@
 from unittest import TestCase, main
 
-from twelf.twelf import Twelf
-from twelf.exceptions import AlreadyDefined, TypeNotDefined, FunctionNotDefined
+from twelf.twelf import Twelf, Parameter
+from twelf.exceptions import AlreadyDefined, TypeNotDefined, FunctionNotDefined, ConstantNotDefined
 
 
 class TestInterpreter(TestCase):
@@ -12,7 +12,7 @@ class TestInterpreter(TestCase):
     def test_type_definition_correct(self):
         interpreter = Twelf()
         interpreter.define_type("ciao")
-        self.assertEqual(interpreter._types, ["type", "ciao"])
+        self.assertEqual(interpreter._types, ["ciao"])
 
     def test_type_definition_already_exists(self):
         interpreter = Twelf()
@@ -29,27 +29,42 @@ class TestInterpreter(TestCase):
         interpreter = Twelf()
         self.assertRaises(TypeNotDefined, interpreter.define_constant, "z", "int")
 
+    def test_parameter_is_constant(self):
+        interpreter = Twelf()
+        interpreter.define_type("int")
+        interpreter.define_constant("z", "int")
+        self.assertEqual(interpreter._parameter_type("z"), Parameter.CONSTANT)
+
+    def test_parameter_is_variable(self):
+        interpreter = Twelf()
+        self.assertEqual(interpreter._parameter_type("X"), Parameter.VARIABLE)
+
+    def test_parameter_is_undefined_constant(self):
+        interpreter = Twelf()
+        self.assertRaises(ConstantNotDefined, interpreter._parameter_type, "z")
+
     def test_function_definition_correct(self):
         interpreter = Twelf()
         interpreter.define_type("int")
-        interpreter.define_function("sum", ["int", "int", "int", "type"])
-        self.assertEqual({"sum": ["int", "int", "int", "type"]}, interpreter._function)
+        interpreter.define_function("sum", ["int", "int", "int"])
+        self.assertEqual({"sum": ["int", "int", "int"]}, interpreter._function)
 
     def test_function_definition_type_not_defined(self):
         interpreter = Twelf()
-        self.assertRaises(TypeNotDefined, interpreter.define_function, "sum", ["int", "int", "int", "type"])
+        self.assertRaises(TypeNotDefined, interpreter.define_function, "sum", ["int", "int", "int"])
 
     def test_rule_definition_correct(self):
         interpreter = Twelf()
         interpreter.define_type("int")
-        interpreter.define_function("sum", ["int", "int", "int", "type"])
+        interpreter.define_constant("0", "int")
+        interpreter.define_function("sum", ["int", "int", "int"])
         rule = [
             ("sum", ["X", "0", "X"]),
         ]
         interpreter.define_rule("sum/0", rule)
         self.assertEqual(
             {"sum/0": [
-                ("sum", ["X", "0", "X"]),
+                ("sum", [("X", Parameter.VARIABLE), ("0", Parameter.CONSTANT), ("X", Parameter.VARIABLE)]),
             ]},
             interpreter._rule,
         )

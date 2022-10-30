@@ -14,6 +14,10 @@ class TypeNotDefined(NotDefined):
     pass
 
 
+class ConstantNotDefined(NotDefined):
+    pass
+
+
 class FunctionNotDefined(NotDefined):
     pass
 
