@@ -1,13 +1,14 @@
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 from twelf.exceptions import AlreadyDefined, TypeNotDefined, FunctionNotDefined, ExpectedParameters
 
 
 class Twelf:
     def __init__(self):
-        self._types = ["type"]
-        self._function = {}
-        self._rule = {}
+        self._types: str = ["type"]
+        self._constants: Dict[str, str] = {}
+        self._function: Dict[str, List[str]] = {}
+        self._rule: Dict[str, List[Tuple[str, List[str | None]]]] = {}
 
     def _check_if_defined(func):
         def inner(self, name, *args):
@@ -22,6 +23,12 @@ class Twelf:
         self._types.append(name)
 
     @_check_if_defined
+    def define_constant(self, name: str, ttype: str):
+        if ttype not in self._types:
+            raise TypeNotDefined(f"{ttype} is not defined")
+        self._constants[name] = ttype
+
+    @_check_if_defined
     def define_function(self, name: str, parameters: List[str]):
         for param in parameters:
             if param not in self._types:
@@ -33,7 +40,7 @@ class Twelf:
         """rule is a list of dictionaries with the name of the function
         as key and the parameters as value
 
-        Example: define_rule('test', [('sum': ['X', 'Y', 'Z']), ('sub': ['Z', 'Y', 'Z'])]) becomes
+        Example: define_rule('test', [('sum': ['X', 'Y', 'Z']), ('sub': ['Z', 'Y', 'X'])]) becomes
 
         test: sub Z Y X
             <- sum X Y Z.

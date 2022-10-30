@@ -15,6 +15,16 @@ class TestInterpreter(TestCase):
         interpreter.define_type("ciao")
         self.assertRaises(AlreadyDefined, interpreter.define_type, "ciao")
 
+    def test_constant_definition_correct(self):
+        interpreter = Twelf()
+        interpreter.define_type("int")
+        interpreter.define_constant("z", "int")
+        self.assertEqual(interpreter._constants["z"], "int")
+
+    def test_constant_definition_type_not_defined(self):
+        interpreter = Twelf()
+        self.assertRaises(TypeNotDefined, interpreter.define_constant, "z", "int")
+
     def test_function_definition_correct(self):
         interpreter = Twelf()
         interpreter.define_type("int")
