@@ -4,6 +4,14 @@ from twelf.exceptions import AlreadyDefined, TypeNotDefined, FunctionNotDefined,
 
 
 class Twelf:
+    RESERVED = [
+        ".",
+        "->",
+        "<-",
+        ":",
+        "%",
+    ]
+
     def __init__(self):
         self._types: str = ["type"]
         self._constants: Dict[str, str] = {}
@@ -12,7 +20,7 @@ class Twelf:
 
     def _check_if_defined(func):
         def inner(self, name, *args):
-            if name in self._types or name in self._function or name in self._rule:
+            if name in self._types or name in self._function or name in self._rule or name in self.RESERVED:
                 raise AlreadyDefined(f"{name} already defined")
             func(self, name, *args)
         return inner

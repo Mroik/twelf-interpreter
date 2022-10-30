@@ -5,6 +5,10 @@ from twelf.exceptions import AlreadyDefined, TypeNotDefined, FunctionNotDefined
 
 
 class TestInterpreter(TestCase):
+    def test_reserved_keywords(self):
+        interpreter = Twelf()
+        self.assertRaises(AlreadyDefined, interpreter.define_type, "<-")
+
     def test_type_definition_correct(self):
         interpreter = Twelf()
         interpreter.define_type("ciao")
