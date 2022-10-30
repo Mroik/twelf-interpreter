@@ -1,7 +1,6 @@
-import unittest
-from unittest import TestCase
+from unittest import TestCase, main
 
-from twelf import InputReader, Lexer
+from twelf.parser import InputReader, Lexer
 
 
 class TestInputReader(TestCase):
@@ -23,4 +22,4 @@ class TestLexer(TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    main()
