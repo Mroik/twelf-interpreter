@@ -1,7 +1,7 @@
 from unittest import TestCase, main
 
 from twelf.twelf import Twelf, Parameter
-from twelf.exceptions import AlreadyDefined, TypeNotDefined, FunctionNotDefined, ConstantNotDefined
+from twelf.exceptions import AlreadyDefined, TypeNotDefined, FunctionNotDefined, ConstantNotDefined, TypeDontMatch
 
 
 class TestInterpreter(TestCase):
@@ -74,6 +74,18 @@ class TestInterpreter(TestCase):
             ]},
             interpreter._rule,
         )
+
+    def test_rule_definition_wrong_parameter_type(self):
+        interpreter = Twelf()
+        interpreter.define_type("int")
+        interpreter.define_type("float")
+        interpreter.define_constant("0", "int")
+        interpreter.define_constant("0,0", "float")
+        interpreter.define_function("sum", ["int", "int", "int"], "type")
+        rule = [
+            ("sum", ["X", "0,0", "X"]),
+        ]
+        self.assertRaises(TypeDontMatch, interpreter.define_rule, "sum/0", rule)
 
     def test_rule_definition_function_not_defined(self):
         interpreter = Twelf()

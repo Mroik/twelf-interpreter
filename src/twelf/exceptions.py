@@ -36,3 +36,7 @@ class RuleAlreadyDefined(AlreadyDefined):
 
 class ExpectedParameters(InterpreterException):
     pass
+
+
+class TypeDontMatch(InterpreterException):
+    pass

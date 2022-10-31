@@ -1,7 +1,14 @@
 from typing import List, Tuple, Dict
 from enum import Enum, auto
 
-from twelf.exceptions import AlreadyDefined, TypeNotDefined, FunctionNotDefined, ExpectedParameters, ConstantNotDefined
+from twelf.exceptions import (
+    AlreadyDefined,
+    TypeNotDefined,
+    FunctionNotDefined,
+    ExpectedParameters,
+    ConstantNotDefined,
+    TypeDontMatch,
+)
 
 
 class Parameter(Enum):
@@ -23,7 +30,7 @@ class Twelf:
         self._types: str = []
         self._constants: Dict[str, str] = {}
         self._function: Dict[str, Tuple[List[str], str]] = {}
-        self._rule: Dict[str, List[Tuple[str, List[None | Tuple[str, Parameter]]]]] = {}
+        self._rule: Dict[str, List[Tuple[str, List[Tuple[str, Parameter]]]]] = {}
 
     def _check_if_defined(func):
         def inner(self, name, *args):
@@ -60,6 +67,7 @@ class Twelf:
             raise TypeNotDefined(f"Type {return_type} doesn't exist")
         self._function[name] = (parameters, return_type)
 
+    # TODO typ checking for variables has to be implemented
     @_check_if_defined
     def define_rule(self, name: str, rule: List[Tuple[str, List[str]]]):
         """rule is a list of dictionaries with the name of the function
@@ -78,7 +86,13 @@ class Twelf:
                 raise ExpectedParameters(f"{func[0]} expects {len(self._function[func[0]][0])} parameters")
 
             params = []
-            for param in func[1]:
+            for i in range(len(func[1])):
+                param = func[1][i]
+                if self._parameter_type(param) == Parameter.CONSTANT:
+                    if self._constants[param] != self._function[func[0]][0][i]:
+                        raise TypeDontMatch(f"{param} has type {self._constants[param]} where type" \
+                                f" {self._function[func[0]][0][i]} is expected")
+
                 params.append((param, self._parameter_type(param)))
             parsed_rule.append((func[0], params))
 
