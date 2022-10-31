@@ -16,7 +16,7 @@ class Parameter(Enum):
     CONSTANT = auto()
 
 
-class Twelf:
+class Interpreter:
     RESERVED = [
         ".",
         "->",
