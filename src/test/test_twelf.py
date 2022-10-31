@@ -46,18 +46,24 @@ class TestInterpreter(TestCase):
     def test_function_definition_correct(self):
         interpreter = Twelf()
         interpreter.define_type("int")
-        interpreter.define_function("sum", ["int", "int", "int"])
-        self.assertEqual({"sum": ["int", "int", "int"]}, interpreter._function)
+        interpreter.define_function("sum", ["int", "int", "int"], "type")
+        self.assertEqual({"sum": (["int", "int", "int"], "type")}, interpreter._function)
+
+    def test_function_definition_with_return_type_user_defined(self):
+        interpreter = Twelf()
+        interpreter.define_type("int")
+        interpreter.define_function("s", ["int"], "int")
+        self.assertEqual({"s": (["int"], "int")}, interpreter._function)
 
     def test_function_definition_type_not_defined(self):
         interpreter = Twelf()
-        self.assertRaises(TypeNotDefined, interpreter.define_function, "sum", ["int", "int", "int"])
+        self.assertRaises(TypeNotDefined, interpreter.define_function, "sum", ["int", "int", "int"], "type")
 
     def test_rule_definition_correct(self):
         interpreter = Twelf()
         interpreter.define_type("int")
         interpreter.define_constant("0", "int")
-        interpreter.define_function("sum", ["int", "int", "int"])
+        interpreter.define_function("sum", ["int", "int", "int"], "type")
         rule = [
             ("sum", ["X", "0", "X"]),
         ]

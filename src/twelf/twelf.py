@@ -22,7 +22,7 @@ class Twelf:
     def __init__(self):
         self._types: str = []
         self._constants: Dict[str, str] = {}
-        self._function: Dict[str, List[str]] = {}
+        self._function: Dict[str, Tuple[List[str], str]] = {}
         self._rule: Dict[str, List[Tuple[str, List[None | Tuple[str, Parameter]]]]] = {}
 
     def _check_if_defined(func):
@@ -51,14 +51,17 @@ class Twelf:
         self._constants[name] = ttype
 
     @_check_if_defined
-    def define_function(self, name: str, parameters: List[str]):
+    def define_function(self, name: str, parameters: List[str], return_type: str):
         for param in parameters:
             if param not in self._types:
                 raise TypeNotDefined(f"Type {param} doesn't exist")
-        self._function[name] = parameters
+
+        if not (return_type == "type" or return_type in self._types):
+            raise TypeNotDefined(f"Type {return_type} doesn't exist")
+        self._function[name] = (parameters, return_type)
 
     @_check_if_defined
-    def define_rule(self, name: str, rule: List[Tuple[str, List[str | None]]]):
+    def define_rule(self, name: str, rule: List[Tuple[str, List[str]]]):
         """rule is a list of dictionaries with the name of the function
         as key and the parameters as value
 
@@ -71,8 +74,8 @@ class Twelf:
         for func in rule:
             if func[0] not in self._function:
                 raise FunctionNotDefined(f"{func[0]} is not a defined function")
-            if len(func[1]) != len(self._function[func[0]]):
-                raise ExpectedParameters(f"{func[0]} expects {len(self._function[func[0]])} parameters")
+            if len(func[1]) != len(self._function[func[0]][0]):
+                raise ExpectedParameters(f"{func[0]} expects {len(self._function[func[0]][0])} parameters")
 
             params = []
             for param in func[1]:
