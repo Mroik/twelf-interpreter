@@ -67,6 +67,17 @@ class Interpreter:
             raise TypeNotDefined(f"Type {return_type} doesn't exist")
         self._function[name] = (parameters, return_type)
 
+    def _parse_parameters(self, func):
+        params = []
+        for i in range(len(func[1])):
+            param = func[1][i]
+            if self._parameter_type(param) == Parameter.CONSTANT and self._constants[param] != self._function[func[0]][0][i]:
+                raise TypeDontMatch(f"{param} has type {self._constants[param]} where type" \
+                        f" {self._function[func[0]][0][i]} is expected")
+
+            params.append((param, self._parameter_type(param)))
+        return params
+
     # TODO typ checking for variables has to be implemented
     @_check_if_defined
     def define_rule(self, name: str, rule: List[Tuple[str, List[str]]]):
@@ -85,15 +96,6 @@ class Interpreter:
             if len(func[1]) != len(self._function[func[0]][0]):
                 raise ExpectedParameters(f"{func[0]} expects {len(self._function[func[0]][0])} parameters")
 
-            params = []
-            for i in range(len(func[1])):
-                param = func[1][i]
-                if self._parameter_type(param) == Parameter.CONSTANT:
-                    if self._constants[param] != self._function[func[0]][0][i]:
-                        raise TypeDontMatch(f"{param} has type {self._constants[param]} where type" \
-                                f" {self._function[func[0]][0][i]} is expected")
-
-                params.append((param, self._parameter_type(param)))
+            params = self._parse_parameters(func)
             parsed_rule.append((func[0], params))
-
         self._rule[name] = parsed_rule
