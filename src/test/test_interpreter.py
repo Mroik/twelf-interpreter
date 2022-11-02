@@ -1,7 +1,14 @@
 from unittest import TestCase, main
 
 from twelf.interpreter import Interpreter, Parameter
-from twelf.exceptions import AlreadyDefined, TypeNotDefined, FunctionNotDefined, ConstantNotDefined, TypeDontMatch
+from twelf.exceptions import (
+        AlreadyDefined,
+        TypeNotDefined,
+        FunctionNotDefined,
+        ConstantNotDefined,
+        TypeDontMatch,
+        NotDefined,
+)
 
 
 class TestTypeDefinition(TestCase):
@@ -42,10 +49,6 @@ class TestFunctionDefinition(TestCase):
     def test_parameter_is_variable(self):
         interpreter = Interpreter()
         self.assertEqual(interpreter._parameter_type("X"), Parameter.VARIABLE)
-
-    def test_parameter_is_undefined_constant(self):
-        interpreter = Interpreter()
-        self.assertRaises(ConstantNotDefined, interpreter._parameter_type, "z")
 
     def test_function_definition_correct(self):
         interpreter = Interpreter()
@@ -100,6 +103,16 @@ class TestRuleDefinition(TestCase):
             ("sum", ["X", "0", "X"]),
         ]
         self.assertRaises(FunctionNotDefined, interpreter.define_rule, "sum/0", rule)
+
+    def test_rule_defintion_parameter_not_defined(self):
+        interpreter = Interpreter()
+        interpreter.define_type("int")
+        interpreter.define_function("sum", ["int", "int", "int"], "type")
+        rule = [
+            ("sum", ["X", "0", "X"]),
+        ]
+        self.assertRaises(NotDefined, interpreter.define_rule, "sum/0", rule)
+
 
 
 if __name__ == "__main__":

@@ -6,6 +6,7 @@ from twelf.exceptions import (
     TypeNotDefined,
     FunctionNotDefined,
     ExpectedParameters,
+    NotDefined,
     ConstantNotDefined,
     TypeDontMatch,
 )
@@ -44,7 +45,9 @@ class Interpreter:
             return Parameter.VARIABLE
         if name in self._constants:
             return Parameter.CONSTANT
-        raise ConstantNotDefined(f"Constant {name} not defined")
+        if name in self._function.keys():
+            return self._function[name][1]
+        raise NotDefined(f"Symbol {name} is not defined")
 
     @_check_if_defined
     def define_type(self, name: str):
@@ -67,11 +70,18 @@ class Interpreter:
             raise TypeNotDefined(f"Type {return_type} doesn't exist")
         self._function[name] = (parameters, return_type)
 
+    def _get_type(self, param, expected):
+        if self._parameter_type(param) == Parameter.CONSTANT:
+            return self._constants[param]
+        else:
+            return expected
+
     def _parse_parameters(self, func):
         params = []
         for i in range(len(func[1])):
             param = func[1][i]
-            if self._parameter_type(param) == Parameter.CONSTANT and self._constants[param] != self._function[func[0]][0][i]:
+            expected = self._function[func[0]][0][i]
+            if self._get_type(param, expected) != expected:
                 raise TypeDontMatch(f"{param} has type {self._constants[param]} where type" \
                         f" {self._function[func[0]][0][i]} is expected")
 
