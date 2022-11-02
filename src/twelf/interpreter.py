@@ -15,6 +15,7 @@ from twelf.exceptions import (
 class Parameter(Enum):
     VARIABLE = auto()
     CONSTANT = auto()
+    FUNCTION = auto()
 
 
 class Interpreter:
@@ -46,7 +47,7 @@ class Interpreter:
         if name in self._constants:
             return Parameter.CONSTANT
         if name in self._function.keys():
-            return self._function[name][1]
+            return Parameter.FUNCTION
         raise NotDefined(f"Symbol {name} is not defined")
 
     @_check_if_defined
@@ -70,13 +71,15 @@ class Interpreter:
             raise TypeNotDefined(f"Type {return_type} doesn't exist")
         self._function[name] = (parameters, return_type)
 
-    def _get_type(self, param, expected):
+    def _get_type(self, param: str, expected: str) -> str:
         if self._parameter_type(param) == Parameter.CONSTANT:
             return self._constants[param]
+        elif self._parameter_type(param) == Parameter.FUNCTION:
+            return self._function[param][1]
         else:
             return expected
 
-    def _parse_parameters(self, func):
+    def _parse_parameters(self, func: Tuple[str, List[str]]):
         params = []
         for i in range(len(func[1])):
             param = func[1][i]
