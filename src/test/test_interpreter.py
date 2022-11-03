@@ -113,6 +113,18 @@ class TestRuleDefinition(TestCase):
         ]
         self.assertRaises(NotDefined, interpreter.define_rule, "sum/0", rule)
 
+    def test_rule_definition_variable_parameter_wrong_type(self):
+        interpreter = Interpreter()
+        interpreter.define_type("int")
+        interpreter.define_constant("0", "int")
+        interpreter.define_type("float")
+        interpreter.define_function("addi", ["int", "int", "int"], "type")
+        interpreter.define_function("addf", ["float", "float", "float"], "type")
+        rules = [
+            ("addi", ["X", "0", "X"]),
+            ("addf", ["X", "Y", "Z"]),
+        ]
+        self.assertRaises(TypeDontMatch, interpreter.define_rule, "add/0", rules)
 
 
 if __name__ == "__main__":

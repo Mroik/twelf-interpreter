@@ -91,7 +91,6 @@ class Interpreter:
             params.append((param, self._parameter_type(param)))
         return params
 
-    # TODO typ checking for variables has to be implemented
     @_check_if_defined
     def define_rule(self, name: str, rule: List[Tuple[str, List[str]]]):
         """rule is a list of dictionaries with the name of the function
@@ -103,6 +102,7 @@ class Interpreter:
             <- sum X Y Z.
         """
         parsed_rule = []
+        local_variables: Dict[str, str] = {}
         for func in rule:
             if func[0] not in self._function:
                 raise FunctionNotDefined(f"{func[0]} is not a defined function")
@@ -110,5 +110,12 @@ class Interpreter:
                 raise ExpectedParameters(f"{func[0]} expects {len(self._function[func[0]][0])} parameters")
 
             params = self._parse_parameters(func)
+            for i in range(len(func[1])):
+                if self._parameter_type(func[1][i]) == Parameter.VARIABLE:
+                    if func[1][i] in local_variables and local_variables[func[1][i]] != self._function[func[0]][0][i]:
+                        raise TypeDontMatch(f"Expected parameter of type {self._function[func[0]][0][i]} but got" \
+                                f" {local_variables[func[1][i]]}")
+                    else:
+                        local_variables[func[1][i]] = self._function[func[0]][0][i]
             parsed_rule.append((func[0], params))
         self._rule[name] = parsed_rule
