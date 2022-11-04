@@ -137,7 +137,9 @@ class TestRuleDefinition(TestCase):
         interpreter.define_rule("sum/0", rule)
         rule.append(("sum", ["0", "0", "0"]))
         interpreter.define_rule("sum/1", rule)
+        self.assertTrue(interpreter._has_new_rule)
         interpreter._make_shortcuts()
+        self.assertFalse(interpreter._has_new_rule)
         self.assertEqual({"sum": ["sum/0", "sum/1"]}, interpreter._f2r)
 
 

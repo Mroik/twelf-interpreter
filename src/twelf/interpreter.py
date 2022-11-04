@@ -7,7 +7,6 @@ from twelf.exceptions import (
     FunctionNotDefined,
     ExpectedParameters,
     NotDefined,
-    ConstantNotDefined,
     TypeDontMatch,
 )
 
@@ -130,4 +129,4 @@ class Interpreter:
             self._f2r[func] = []
         for rule in self._rule.keys():
             self._f2r[self._rule[rule][0][0]].append(rule)
-        self._has_new_rule = True
+        self._has_new_rule = False
