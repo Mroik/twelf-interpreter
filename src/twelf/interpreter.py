@@ -96,10 +96,10 @@ class Interpreter:
         """rule is a list of dictionaries with the name of the function
         as key and the parameters as value
 
-        Example: define_rule('test', [('sum': ['X', 'Y', 'Z']), ('sub': ['Z', 'Y', 'X'])]) becomes
+        Example: define_rule('test', [('sub': ['X', 'Y', 'Z']), ('sum': ['Z', 'Y', 'X'])]) becomes
 
-        test: sub Z Y X
-            <- sum X Y Z.
+        test: sub X Y Z
+            <- sum Z Y X.
         """
         parsed_rule = []
         local_variables: Dict[str, str] = {}
