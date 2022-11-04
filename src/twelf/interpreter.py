@@ -33,6 +33,8 @@ class Interpreter:
         self._constants: Dict[str, str] = {}
         self._function: Dict[str, Tuple[List[str], str]] = {}
         self._rule: Dict[str, List[Tuple[str, List[Tuple[str, Parameter]]]]] = {}
+        self._f2r: Dict[str, List[str]] = {}
+        self._has_new_rule = False
 
     def _check_if_defined(func):
         def inner(self, name, *args):
@@ -101,6 +103,7 @@ class Interpreter:
         test: sub X Y Z
             <- sum Z Y X.
         """
+        self._has_new_rule = True
         parsed_rule = []
         local_variables: Dict[str, str] = {}
         for func in rule:
@@ -119,3 +122,12 @@ class Interpreter:
                         local_variables[func[1][i]] = self._function[func[0]][0][i]
             parsed_rule.append((func[0], params))
         self._rule[name] = parsed_rule
+
+    def _make_shortcuts(self):
+        if not self._has_new_rule:
+            return
+        for func in self._function.keys():
+            self._f2r[func] = []
+        for rule in self._rule.keys():
+            self._f2r[self._rule[rule][0][0]].append(rule)
+        self._has_new_rule = True

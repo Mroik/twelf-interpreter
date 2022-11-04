@@ -126,6 +126,20 @@ class TestRuleDefinition(TestCase):
         ]
         self.assertRaises(TypeDontMatch, interpreter.define_rule, "add/0", rules)
 
+    def test_function_to_rule_struct(self):
+        interpreter = Interpreter()
+        interpreter.define_type("int")
+        interpreter.define_constant("0", "int")
+        interpreter.define_function("sum", ["int", "int", "int"], "type")
+        rule = [
+            ("sum", ["X", "0", "X"]),
+        ]
+        interpreter.define_rule("sum/0", rule)
+        rule.append(("sum", ["0", "0", "0"]))
+        interpreter.define_rule("sum/1", rule)
+        interpreter._make_shortcuts()
+        self.assertEqual({"sum": ["sum/0", "sum/1"]}, interpreter._f2r)
+
 
 if __name__ == "__main__":
     main()
