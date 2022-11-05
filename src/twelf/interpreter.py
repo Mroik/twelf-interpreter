@@ -1,132 +1,111 @@
-from typing import List, Tuple, Dict
+from typing import List, Tuple
 from enum import Enum, auto
 
-from twelf.exceptions import (
-    AlreadyDefined,
-    TypeNotDefined,
-    FunctionNotDefined,
-    ExpectedParameters,
-    NotDefined,
-    TypeDontMatch,
-)
 
-
-class Parameter(Enum):
-    VARIABLE = auto()
+class TokenType(Enum):
     CONSTANT = auto()
+    VARIABLE = auto()
     FUNCTION = auto()
 
 
-class Interpreter:
-    RESERVED = [
-        ".",
-        "->",
-        "<-",
-        ":",
-        "%",
-        "type",
-    ]
+class Type:
+    def __init__(self, name: str):
+        self._name = name
 
-    def __init__(self):
-        self._types: str = []
-        self._constants: Dict[str, str] = {}
-        self._function: Dict[str, Tuple[List[str], str]] = {}
-        self._rule: Dict[str, List[Tuple[str, List[Tuple[str, Parameter]]]]] = {}
-        self._f2r: Dict[str, List[str]] = {}
-        self._has_new_rule = False
+    def __eq__(self, other):
+        return self.name == other.name
 
-    def _check_if_defined(func):
-        def inner(self, name, *args):
-            if name in self._types or name in self._function or name in self._rule or name in self.RESERVED:
-                raise AlreadyDefined(f"{name} already defined")
-            func(self, name, *args)
-        return inner
+    @property
+    def name(self):
+        return self._name
 
-    def _parameter_type(self, name: str) -> Parameter:
-        if ord(name[0]) >= 65 and ord(name[0]) <= 90:
-            return Parameter.VARIABLE
-        if name in self._constants:
-            return Parameter.CONSTANT
-        if name in self._function.keys():
-            return Parameter.FUNCTION
-        raise NotDefined(f"Symbol {name} is not defined")
 
-    @_check_if_defined
-    def define_type(self, name: str):
-        """define_type('int') becomes `int: type.`"""
-        self._types.append(name)
+class Constant:
+    def __init__(self, name: str, ttype: Type):
+        self._name = name
+        self._type = ttype
 
-    @_check_if_defined
-    def define_constant(self, name: str, ttype: str):
-        if ttype not in self._types:
-            raise TypeNotDefined(f"{ttype} is not defined")
-        self._constants[name] = ttype
+    @property
+    def name(self):
+        return self._name
 
-    @_check_if_defined
-    def define_function(self, name: str, parameters: List[str], return_type: str):
-        for param in parameters:
-            if param not in self._types:
-                raise TypeNotDefined(f"Type {param} doesn't exist")
+    @property
+    def type(self):
+        return self._type
 
-        if not (return_type == "type" or return_type in self._types):
-            raise TypeNotDefined(f"Type {return_type} doesn't exist")
-        self._function[name] = (parameters, return_type)
 
-    def _get_type(self, param: str, expected: str) -> str:
-        if self._parameter_type(param) == Parameter.CONSTANT:
-            return self._constants[param]
-        elif self._parameter_type(param) == Parameter.FUNCTION:
-            return self._function[param][1]
-        else:
-            return expected
+class Function:
+    def __init__(self, name: str, parameter_types: List[Type], return_type: Type):
+        self._name = name
+        self._parameter_types = parameter_types
+        self._return_type = return_type
 
-    def _parse_parameters(self, func: Tuple[str, List[str]]):
-        params = []
-        for i in range(len(func[1])):
-            param = func[1][i]
-            expected = self._function[func[0]][0][i]
-            if self._get_type(param, expected) != expected:
-                raise TypeDontMatch(f"{param} has type {self._constants[param]} where type" \
-                        f" {self._function[func[0]][0][i]} is expected")
+    @property
+    def name(self):
+        return self._name
 
-            params.append((param, self._parameter_type(param)))
-        return params
+    @property
+    def parameter_types(self):
+        return tuple(self._parameter_types)
 
-    @_check_if_defined
-    def define_rule(self, name: str, rule: List[Tuple[str, List[str]]]):
-        """rule is a list of dictionaries with the name of the function
-        as key and the parameters as value
+    @property
+    def return_type(self):
+        return self._return_type
 
-        Example: define_rule('test', [('sub': ['X', 'Y', 'Z']), ('sum': ['Z', 'Y', 'X'])]) becomes
 
-        test: sub X Y Z
-            <- sum Z Y X.
-        """
-        self._has_new_rule = True
-        parsed_rule = []
-        local_variables: Dict[str, str] = {}
-        for func in rule:
-            if func[0] not in self._function:
-                raise FunctionNotDefined(f"{func[0]} is not a defined function")
-            if len(func[1]) != len(self._function[func[0]][0]):
-                raise ExpectedParameters(f"{func[0]} expects {len(self._function[func[0]][0])} parameters")
+class Parameter:
+    def __init__(self, value: str | Constant | Function, token_type: TokenType, parameters: List["Parameter"] = None):
+        self._value = value
+        if token_type == TokenType.FUNCTION and parameters is None:
+            raise Exception
+        self._token_type = token_type
+        if token_type == TokenType.FUNCTION:
+            self._check_parameter(value, parameters)
+        self._parameters = parameters
 
-            params = self._parse_parameters(func)
-            for i in range(len(func[1])):
-                if self._parameter_type(func[1][i]) == Parameter.VARIABLE:
-                    if func[1][i] in local_variables and local_variables[func[1][i]] != self._function[func[0]][0][i]:
-                        raise TypeDontMatch(f"Expected parameter of type {self._function[func[0]][0][i]} but got" \
-                                f" {local_variables[func[1][i]]}")
-                    else:
-                        local_variables[func[1][i]] = self._function[func[0]][0][i]
-            parsed_rule.append((func[0], params))
-        self._rule[name] = parsed_rule
-
-    def _make_shortcuts(self):
-        if not self._has_new_rule:
+    def _check_parameter(self, func: Function, params: List["Parameter"]):
+        if self._token_type != TokenType.FUNCTION:
             return
-        for func in self._function.keys():
-            self._f2r[func] = []
-        for rule in self._rule.keys():
-            self._f2r[self._rule[rule][0][0]].append(rule)
-        self._has_new_rule = False
+        if len(func.parameter_types) != len(params):
+            raise Exception
+        for x in range(len(params)):
+            if params[x].token_type == TokenType.CONSTANT and params[x].value.type != func.parameter_types[x]:
+                raise Exception
+            if params[x].token_type == TokenType.FUNCTION and params[x].value.return_type != func.parameter_types[x]:
+                raise Exception
+
+    @property
+    def value(self):
+        return self._value
+
+    @property
+    def token_type(self):
+        return self._token_type
+
+
+class Rule:
+    def __init__(self, name: str, functions: List[Tuple[Function, Tuple[Parameter]]]):
+        self._name = name
+        self._functions = functions
+
+    def __iter__(self):
+        self._func_index = 0
+        return self
+
+    def __next__(self):
+        if self._func_index >= len(self._functions):
+            raise StopIteration
+        self._func_index += 1
+        return self._functions[self._func_index]
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def functions(self):
+        return tuple(self._functions)
+
+
+class Interpreter:
+    pass
