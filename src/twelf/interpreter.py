@@ -9,6 +9,8 @@ class TokenType(Enum):
 
 
 class Type:
+    DEFINER = "type"
+
     def __init__(self, name: str):
         self._name = name
 
@@ -54,14 +56,29 @@ class Function:
 
 
 class Parameter:
-    def __init__(self, value: str | Constant | Function, token_type: TokenType, parameters: List["Parameter"] = None):
+    def __init__(self, value: str | Constant | Function, parameters: List["Parameter"] = None):
         self._value = value
-        if token_type == TokenType.FUNCTION and parameters is None:
+        if isinstance(value, str) and ord(value[0]) >= 65 and ord(value[0]) <= 90:
+            self._token_type = TokenType.VARIABLE
+        elif isinstance(value, Constant):
+            self._token_type = TokenType.CONSTANT
+        elif isinstance(value, Function):
+            self._token_type = TokenType.FUNCTION
+        else:
             raise Exception
-        self._token_type = token_type
-        if token_type == TokenType.FUNCTION:
+
+        if self.token_type == TokenType.FUNCTION and parameters is None:
+            raise Exception
+        if self.token_type == TokenType.FUNCTION:
             self._check_parameter(value, parameters)
         self._parameters = parameters
+
+    def __eq__(self, other):
+        if self.token_type != other.token_type:
+            return False
+        if self.token_type == TokenType.VARIABLE or self.token_type == TokenType.CONSTANT:
+            return self.value == other.value
+        return self._parameters == other._parameters
 
     def _check_parameter(self, func: Function, params: List["Parameter"]):
         if self._token_type != TokenType.FUNCTION:
