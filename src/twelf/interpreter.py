@@ -1,5 +1,15 @@
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 from enum import Enum, auto
+
+
+RESERVED = (
+    "%",
+    ".",
+    "<-",
+    "->",
+    "type",
+    ":",
+)
 
 
 class TokenType(Enum):
@@ -39,6 +49,9 @@ class Constant:
     def __repr__(self):
         return self.__str__()
 
+    def __eq__(self, other):
+        return self.name == other.name
+
     @property
     def name(self):
         return self._name
@@ -61,6 +74,9 @@ class Function:
 
     def __repr__(self):
         return self.__str__()
+
+    def __eq__(self, other):
+        return self.name == other.name
 
     @property
     def name(self):
@@ -140,6 +156,9 @@ class Rule:
             raise StopIteration
         self._func_index += 1
         return self._functions[self._func_index]
+
+    def __eq__(self, other):
+        return self.name == other.name
 
     @property
     def name(self):
