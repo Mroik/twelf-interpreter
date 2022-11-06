@@ -1,7 +1,7 @@
 from unittest import TestCase
 from random import randint
 
-from twelf.interpreter import Type, Constant, Function, Parameter, TokenType, Rule
+from twelf.interpreter import Type, Constant, Function, Parameter, TokenType, Rule, Interpreter
 
 
 class TestType(TestCase):
@@ -86,3 +86,37 @@ class TestRule(TestCase):
             Parameter("Z"),
         )), )
         self.assertEqual(rule.functions, oracle)
+
+
+class TestInterpreter(TestCase):
+    def test_type_definition(self):
+        inter = Interpreter()
+        inter.define_type("int")
+        self.assertEqual(inter._types, [Type("int")])
+
+    def test_constant_definition(self):
+        inter = Interpreter()
+        integer = inter.define_type("int")
+        inter.define_constant("1", integer)
+        self.assertEqual(inter._constants, [Constant("1", integer)])
+
+    def test_function_definition(self):
+        inter = Interpreter()
+        integer = inter.define_type("int")
+        inter.define_function("sum", [integer, integer, integer], Type(Type.DEFINER))
+        self.assertEqual(inter._functions, [Function("sum", [integer, integer, integer], Type(Type.DEFINER))])
+
+    def test_rule_definition(self):
+        inter = Interpreter()
+        integer = inter.define_type("int")
+        func = inter.define_function("sum", [integer, integer, integer], Type(Type.DEFINER))
+        inter.define_rule("ss", [(func, (
+            Parameter("X"),
+            Parameter("Y"),
+            Parameter("Z"),
+        ))])
+        self.assertEqual(inter._rules, [Rule("ss", [(func, (
+            Parameter("X"),
+            Parameter("Y"),
+            Parameter("Z"),
+        ))])])

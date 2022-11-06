@@ -170,4 +170,42 @@ class Rule:
 
 
 class Interpreter:
-    pass
+    def __init__(self):
+        self._types: List[Type] = []
+        self._constants: List[Constant] = []
+        self._functions: List[Function] = []
+        self._rules: List[Rule] = []
+
+    def _is_already_defined(func):
+        def inner(self, name, *args):
+            if name in [x.name for x in self._types] \
+                    or name in [x.name for x in self._constants] \
+                    or name in [x.name for x in self._functions] \
+                    or name in [x.name for x in self._rules]:
+                raise Exception
+            func(self, name, *args)
+        return inner
+
+    @_is_already_defined
+    def define_type(self, name: str) -> Type:
+        new_value = Type(name)
+        self._types.append(new_value)
+        return new_value
+
+    @_is_already_defined
+    def define_constant(self, name: str, ttype: Type) -> Constant:
+        new_value = Constant(name, ttype)
+        self._constants.append(new_value)
+        return new_value
+
+    @_is_already_defined
+    def define_function(self, name: str, param_types: List[Type], return_type: Type) -> Function:
+        new_value = Function(name, param_types, return_type)
+        self._functions.append(new_value)
+        return new_value
+
+    @_is_already_defined
+    def define_rule(self, name: str, functions: List[Tuple[Function, Tuple[Parameter]]]) -> Rule:
+        new_value = Rule(name, functions)
+        self._rules.append(new_value)
+        return new_value
