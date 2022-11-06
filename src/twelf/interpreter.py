@@ -17,6 +17,12 @@ class Type:
     def __eq__(self, other):
         return self.name == other.name
 
+    def __str__(self):
+        return f"Type[{self._name}]"
+
+    def __repr__(self):
+        return self.__str__()
+
     @property
     def name(self):
         return self._name
@@ -26,6 +32,12 @@ class Constant:
     def __init__(self, name: str, ttype: Type):
         self._name = name
         self._type = ttype
+
+    def __str__(self):
+        return f"Constant[{self._name}, {self._type}]"
+
+    def __repr__(self):
+        return self.__str__()
 
     @property
     def name(self):
@@ -39,8 +51,16 @@ class Constant:
 class Function:
     def __init__(self, name: str, parameter_types: List[Type], return_type: Type):
         self._name = name
+        if len(parameter_types) == 0:
+            raise Exception
         self._parameter_types = parameter_types
         self._return_type = return_type
+
+    def __str__(self):
+        return f"{self._name}: {' -> '.join([x.name for x in self._parameter_types])} -> {self._return_type.name}"
+
+    def __repr__(self):
+        return self.__str__()
 
     @property
     def name(self):
@@ -79,6 +99,12 @@ class Parameter:
         if self.token_type == TokenType.VARIABLE or self.token_type == TokenType.CONSTANT:
             return self.value == other.value
         return self._parameters == other._parameters
+
+    def __str__(self):
+        return f"Parameter[{self._value}]"
+
+    def __repr__(self):
+        return self.__str__()
 
     def _check_parameter(self, func: Function, params: List["Parameter"]):
         if self._token_type != TokenType.FUNCTION:
