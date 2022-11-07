@@ -183,7 +183,7 @@ class Interpreter:
                     or name in [x.name for x in self._functions] \
                     or name in [x.name for x in self._rules]:
                 raise Exception
-            func(self, name, *args)
+            return func(self, name, *args)
         return inner
 
     @_is_already_defined
