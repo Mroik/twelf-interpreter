@@ -149,6 +149,12 @@ class Parameter:
     def token_type(self):
         return self._token_type
 
+    @property
+    def parameters(self):
+        if self._token_type != TokenType.FUNCTION:
+            raise Exception
+        return tuple(self._parameters)
+
 
 class Rule:
     def __init__(self, name: str, functions: List[Tuple[Function, Tuple[Parameter]]]):
@@ -225,3 +231,12 @@ class Interpreter:
         self._rules.append(new_value)
         self._f2r[functions[0][0]].append(new_value)
         return new_value
+
+    # TODO Decide how to rappresent context
+    def _eval(self, func: Function, params: List[Parameter], context: Dict[str, str]) -> bool:
+        variables = filter(lambda x: x.token_type == TokenType.VARIABLE, params)
+        next_var = [0 for x in variables]
+
+    def eval(self, func: Parameter):
+        if func.token_type != TokenType.FUNCTION:
+            return
