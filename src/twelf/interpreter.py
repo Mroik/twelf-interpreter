@@ -25,6 +25,8 @@ class Type:
         self._name = name
 
     def __eq__(self, other):
+        if isinstance(other, str):
+            return self.name == other
         return self.name == other.name
 
     def __str__(self):
@@ -32,6 +34,9 @@ class Type:
 
     def __repr__(self):
         return self.__str__()
+
+    def __hash__(self):
+        return hash((self._name, ))
 
     @property
     def name(self):
@@ -77,6 +82,9 @@ class Function:
 
     def __eq__(self, other):
         return self.name == other.name
+
+    def __hash__(self):
+        return hash((self._name, self.parameter_types, self._return_type))
 
     @property
     def name(self):
@@ -175,6 +183,8 @@ class Interpreter:
         self._constants: List[Constant] = []
         self._functions: List[Function] = []
         self._rules: List[Rule] = []
+        self._t2c_f: Dict[Type, List[Constant | Function]] = {}
+        self._f2r: Dict[Function, List[Rule]] = {}
 
     def _is_already_defined(func):
         def inner(self, name, *args):
@@ -190,22 +200,28 @@ class Interpreter:
     def define_type(self, name: str) -> Type:
         new_value = Type(name)
         self._types.append(new_value)
+        self._t2c_f[new_value] = []
         return new_value
 
     @_is_already_defined
     def define_constant(self, name: str, ttype: Type) -> Constant:
         new_value = Constant(name, ttype)
         self._constants.append(new_value)
+        self._t2c_f[ttype].append(new_value)
         return new_value
 
     @_is_already_defined
     def define_function(self, name: str, param_types: List[Type], return_type: Type) -> Function:
         new_value = Function(name, param_types, return_type)
         self._functions.append(new_value)
+        if new_value.return_type != Type("type"):
+            self._t2c_f[new_value.return_type].append(new_value)
+        self._f2r[new_value] = []
         return new_value
 
     @_is_already_defined
     def define_rule(self, name: str, functions: List[Tuple[Function, Tuple[Parameter]]]) -> Rule:
         new_value = Rule(name, functions)
         self._rules.append(new_value)
+        self._f2r[functions[0][0]].append(new_value)
         return new_value

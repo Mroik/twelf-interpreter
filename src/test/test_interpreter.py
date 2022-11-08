@@ -93,24 +93,28 @@ class TestInterpreter(TestCase):
         inter = Interpreter()
         inter.define_type("int")
         self.assertEqual(inter._types, [Type("int")])
+        self.assertEqual(inter._t2c_f, {Type("int"): []})
 
     def test_constant_definition(self):
         inter = Interpreter()
         integer = inter.define_type("int")
         inter.define_constant("1", integer)
         self.assertEqual(inter._constants, [Constant("1", integer)])
+        self.assertEqual(inter._t2c_f, {integer: [Constant("1", integer)]})
 
     def test_function_definition(self):
         inter = Interpreter()
         integer = inter.define_type("int")
-        inter.define_function("sum", [integer, integer, integer], Type(Type.DEFINER))
-        self.assertEqual(inter._functions, [Function("sum", [integer, integer, integer], Type(Type.DEFINER))])
+        func = inter.define_function("sum", [integer, integer, integer], Type(Type.DEFINER))
+        self.assertEqual(inter._functions, [func])
+        self.assertEqual(inter._t2c_f, {integer: []})
+        self.assertEqual(inter._f2r, {func: []})
 
     def test_rule_definition(self):
         inter = Interpreter()
         integer = inter.define_type("int")
         func = inter.define_function("sum", [integer, integer, integer], Type(Type.DEFINER))
-        inter.define_rule("ss", [(func, (
+        rule = inter.define_rule("ss", [(func, (
             Parameter("X"),
             Parameter("Y"),
             Parameter("Z"),
@@ -120,3 +124,4 @@ class TestInterpreter(TestCase):
             Parameter("Y"),
             Parameter("Z"),
         ))])])
+        self.assertEqual(inter._f2r, {func: [rule]})
