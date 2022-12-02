@@ -125,3 +125,19 @@ class TestInterpreter(TestCase):
             Parameter("Z"),
         ))])])
         self.assertEqual(inter._f2r, {func: [rule]})
+
+    def test_unify(self):
+        inter = Interpreter()
+        integer = inter.define_type("int")
+        s = inter.define_function("s", [integer], integer)
+        ris = inter._unify(
+                Parameter(s, [
+                    Parameter(s, [
+                        Parameter("Y")
+                    ])
+                ]),
+                Parameter(s, [
+                    Parameter("X")
+                ])
+        )
+        self.assertEqual([(Parameter("X"), Parameter(s, [Parameter("Y")]))], ris)

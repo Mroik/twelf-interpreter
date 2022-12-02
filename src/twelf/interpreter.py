@@ -125,6 +125,8 @@ class Parameter:
         return self._parameters == other._parameters
 
     def __str__(self):
+        if self._token_type == TokenType.FUNCTION:
+            return f"Parameter[{self._value, self._parameters}]"
         return f"Parameter[{self._value}]"
 
     def __repr__(self):
@@ -232,11 +234,45 @@ class Interpreter:
         self._f2r[functions[0][0]].append(new_value)
         return new_value
 
-    # TODO Decide how to rappresent context
-    def _eval(self, func: Function, params: List[Parameter], context: Dict[str, str]) -> bool:
-        variables = filter(lambda x: x.token_type == TokenType.VARIABLE, params)
-        next_var = [0 for x in variables]
+    # https://www.javatpoint.com/ai-unification-in-first-order-logic#:~:text=The%20UNIFY%20algorithm%20is%20used,not%20match%20with%20each%20other.
+    # I swear this was the only resource without any greek letter, made it so much easier to comprehend
+    # if you want to better understand the theory behind it I'd advise you to checkout prof. Momigliano's
+    # slides on unification (momigliano@di.unimi.it)
+    def _unify(self, p1: Parameter, p2: Parameter):
+        if p1.token_type == TokenType.VARIABLE or p1.token_type == TokenType.CONSTANT \
+        or p2.token_type == TokenType.VARIABLE or p2.token_type == TokenType.CONSTANT:
+            if p1 == p2:
+                return []
+            elif p1.token_type == TokenType.VARIABLE:
+                if occurs(p2, p1):
+                    return False
+                else:
+                    return [(p1, p2)]
+            elif p2.token_type == TokenType.VARIABLE:
+                if occurs(p1, p2):
+                    return False
+                else:
+                    return [(p2, p1)]
+            else:
+                return False
+        elif p1.value != p2.value:
+            return False
+        sub = []
+        for x in range(len(p1.parameters)):
+            temp = self._unify(p1.parameters[x], p2.parameters[x])
+            if temp == False:
+                return False
+            if len(temp) > 0:
+                sub = sub + temp
+        return sub
 
-    def eval(self, func: Parameter):
-        if func.token_type != TokenType.FUNCTION:
-            return
+
+def occurs(root: Parameter, p: Parameter):
+    if root == p:
+        return True
+    if root.token_type != TokenType.FUNCTION:
+        return False
+    for x in root.parameters:
+        if occurs(x, p):
+            return True
+    return False
