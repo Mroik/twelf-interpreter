@@ -244,17 +244,14 @@ class Interpreter:
             if p1 == p2:
                 return []
             elif p1.token_type == TokenType.VARIABLE:
-                if occurs(p2, p1):
+                if self._occurs(p2, p1):
                     return False
-                else:
-                    return [(p1, p2)]
+                return [(p1, p2)]
             elif p2.token_type == TokenType.VARIABLE:
-                if occurs(p1, p2):
+                if self._occurs(p1, p2):
                     return False
-                else:
-                    return [(p2, p1)]
-            else:
-                return False
+                return [(p2, p1)]
+            return False
         elif p1.value != p2.value:
             return False
         sub = []
@@ -266,13 +263,12 @@ class Interpreter:
                 sub = sub + temp
         return sub
 
-
-def occurs(root: Parameter, p: Parameter):
-    if root == p:
-        return True
-    if root.token_type != TokenType.FUNCTION:
-        return False
-    for x in root.parameters:
-        if occurs(x, p):
+    def _occurs(self, root: Parameter, p: Parameter):
+        if root == p:
             return True
-    return False
+        if root.token_type != TokenType.FUNCTION:
+            return False
+        for x in root.parameters:
+            if self._occurs(x, p):
+                return True
+        return False
