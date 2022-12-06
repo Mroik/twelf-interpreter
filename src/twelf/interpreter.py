@@ -272,3 +272,15 @@ class Interpreter:
             if self._occurs(x, p):
                 return True
         return False
+
+    def _has_variable(self, root: Parameter):
+        if root.token_type != TokenType.FUNCTION:
+            raise Exception
+        for x in len(root.parameters):
+            if root.parameters[x].token_type == TokenType.VARIABLE:
+                return root.value.parameter_types[x]
+            if root.parameters[x].token_type == TokenType.FUNCTION:
+                found = self._has_variable(root.parameters[x])
+                if found != False:
+                    return found
+        return False
